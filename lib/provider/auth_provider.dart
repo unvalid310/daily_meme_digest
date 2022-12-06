@@ -1,0 +1,51 @@
+import 'package:flutter/cupertino.dart';
+import 'package:daily_meme_digest/data/model/response/base/api_response.dart';
+import 'package:daily_meme_digest/data/model/response/response_model.dart';
+import 'package:daily_meme_digest/data/repository/auth_repo.dart';
+
+class AuthProvider with ChangeNotifier {
+  final AuthRepo authRepo;
+
+  AuthProvider({@required this.authRepo});
+
+  bool _isLoading = false;
+
+  bool get isLoading => _isLoading;
+
+  Future<ResponseModel> login(String email, String password) async {
+    _isLoading = true;
+    ApiResponse apiResponse = await authRepo.login(email, password);
+    ResponseModel responseModel;
+    if (apiResponse.response.data['success']) {
+      Map<String, dynamic> data = apiResponse.response.data['data'];
+      await authRepo.saveUserData(
+        idUser: int.parse(data['id']),
+        email: data['email'],
+        username: data['username'],
+        password: data['password'],
+      );
+
+      responseModel = ResponseModel(apiResponse.response.data['success'],
+          apiResponse.response.data['message']);
+    } else {
+      responseModel = ResponseModel(apiResponse.response.data['success'],
+          apiResponse.response.data['message']);
+      _isLoading = false;
+    }
+
+    notifyListeners();
+    return responseModel;
+  }
+
+  bool isLoggedIn() {
+    return authRepo.isLoggedIn();
+  }
+
+  Future<bool> logout() async {
+    bool status = false;
+    status = await authRepo.clearSharedData().then((value) {
+      return value;
+    });
+    return status;
+  }
+}
