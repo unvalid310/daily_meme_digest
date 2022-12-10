@@ -12,12 +12,25 @@ class AuthRepo {
 
   AuthRepo({@required this.dioClient, @required this.sharedPreferences});
 
-  Future<ApiResponse> login(String email, String password) async {
+  Future<ApiResponse> registration(Map<String, dynamic> data) async {
+    try {
+      Response response = await dioClient.post(
+        AppConstants.LOGIN_URI,
+        data: data,
+      );
+      return ApiResponse.withSuccess(response);
+    } catch (e) {
+      print(e.toString());
+      return ApiResponse.withError(ApiErrorHandler.getMessage(e));
+    }
+  }
+
+  Future<ApiResponse> login(String username, String password) async {
     try {
       Response response = await dioClient.post(
         AppConstants.LOGIN_URI,
         data: FormData.fromMap({
-          "email": email,
+          "username": username,
           "password": password,
         }),
       );
@@ -30,19 +43,19 @@ class AuthRepo {
 
   Future<void> saveUserData(
       {@required int idUser,
-      String email,
-      String username,
-      String password}) async {
+      String profilePicture,
+      String userName,
+      String name}) async {
     try {
       sharedPreferences.setString(AppConstants.ID_USER, idUser.toString());
-      sharedPreferences.setString(AppConstants.EMAIL, email);
-      sharedPreferences.setString(AppConstants.USERNAME, username);
-      sharedPreferences.setString(AppConstants.PASSWORD, password);
+      sharedPreferences.setString(AppConstants.USERNAME, userName);
+      sharedPreferences.setString(AppConstants.NAME, name);
+      sharedPreferences.setString(AppConstants.PROFILE_PICTURE, profilePicture);
     } catch (e) {}
   }
 
   bool isLoggedIn() {
-    return sharedPreferences.containsKey(AppConstants.EMAIL);
+    return sharedPreferences.containsKey(AppConstants.ID_USER);
   }
 
   Future<bool> clearSharedData() async {

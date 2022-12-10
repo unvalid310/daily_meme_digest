@@ -12,18 +12,36 @@ class AuthProvider with ChangeNotifier {
 
   bool get isLoading => _isLoading;
 
-  Future<ResponseModel> login(String email, String password) async {
+  Future<ResponseModel> registration(Map<String, dynamic> data) async {
     _isLoading = true;
-    ApiResponse apiResponse = await authRepo.login(email, password);
     ResponseModel responseModel;
+    ApiResponse apiResponse = await authRepo.registration(data);
     if (apiResponse.response.data['success']) {
       Map<String, dynamic> data = apiResponse.response.data['data'];
       await authRepo.saveUserData(
-        idUser: int.parse(data['id']),
-        email: data['email'],
-        username: data['username'],
-        password: data['password'],
+        idUser: data['id'],
+        name: data['name'],
+        userName: data['username'],
+        profilePicture: data['image'],
       );
+      responseModel = ResponseModel(apiResponse.response.data['success'],
+          apiResponse.response.data['message']);
+    } else {
+      responseModel = ResponseModel(apiResponse.response.data['success'],
+          apiResponse.response.data['message']);
+      _isLoading = false;
+    }
+    notifyListeners();
+    return responseModel;
+  }
+
+  Future<ResponseModel> login(String username, String password) async {
+    _isLoading = true;
+    ApiResponse apiResponse = await authRepo.login(username, password);
+    ResponseModel responseModel;
+    if (apiResponse.response.data['success']) {
+      Map<String, dynamic> data = apiResponse.response.data['data'];
+      await authRepo.saveUserData(idUser: int.parse(data['id']));
 
       responseModel = ResponseModel(apiResponse.response.data['success'],
           apiResponse.response.data['message']);

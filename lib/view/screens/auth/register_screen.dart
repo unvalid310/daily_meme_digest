@@ -1,9 +1,12 @@
+import 'package:daily_meme_digest/provider/auth_provider.dart';
 import 'package:daily_meme_digest/util/routes.dart';
 import 'package:daily_meme_digest/util/styles.dart';
 import 'package:daily_meme_digest/view/base/custom_field.dart';
+import 'package:daily_meme_digest/view/base/custom_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
 
 class RegisterScreen extends StatelessWidget {
@@ -12,7 +15,7 @@ class RegisterScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final _formKey = GlobalKey<FormState>();
-    final TextEditingController _emailController = TextEditingController();
+    final TextEditingController _usernameController = TextEditingController();
     final TextEditingController _passwordController = TextEditingController();
     final TextEditingController _repeatPasswordController =
         TextEditingController();
@@ -40,61 +43,66 @@ class RegisterScreen extends StatelessWidget {
               child: Container(
                 padding: EdgeInsets.fromLTRB(30, 0, 30, 0),
                 width: double.infinity,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Text(
-                        'Daily Meme Digest',
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Text(
+                          'Daily Meme Digest',
+                          style: poppinsMedium.copyWith(
+                            fontSize: 18.sp,
+                          ),
+                        ),
+                      ),
+                      Center(
+                        child: Text(
+                          'Create Account',
+                          style: poppinsRegular.copyWith(
+                            fontSize: 14.sp,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 30),
+                      Text(
+                        'Username',
                         style: poppinsMedium.copyWith(
-                          fontSize: 18.sp,
+                          fontSize: 12.sp,
                         ),
                       ),
-                    ),
-                    Center(
-                      child: Text(
-                        'Create Account',
-                        style: poppinsRegular.copyWith(
-                          fontSize: 14.sp,
+                      CustomField(
+                        hintText: 'Enter Username',
+                        controller: _usernameController,
+                      ),
+                      SizedBox(height: 20),
+                      Text(
+                        'Password',
+                        style: poppinsMedium.copyWith(
+                          fontSize: 12.sp,
                         ),
                       ),
-                    ),
-                    SizedBox(height: 30),
-                    Text(
-                      'Username',
-                      style: poppinsMedium.copyWith(
-                        fontSize: 12.sp,
+                      CustomField(
+                        hintText: 'Enter Password',
+                        isPassword: true,
+                        isShowSuffixIcon: true,
+                        controller: _passwordController,
                       ),
-                    ),
-                    CustomField(
-                      hintText: 'Enter Username',
-                      onTap: () {},
-                    ),
-                    SizedBox(height: 20),
-                    Text(
-                      'Password',
-                      style: poppinsMedium.copyWith(
-                        fontSize: 12.sp,
+                      SizedBox(height: 20),
+                      Text(
+                        'Repeat Password',
+                        style: poppinsMedium.copyWith(
+                          fontSize: 12.sp,
+                        ),
                       ),
-                    ),
-                    CustomField(
-                      hintText: 'Enter Password',
-                      isPassword: true,
-                      isShowSuffixIcon: true,
-                    ),
-                    SizedBox(height: 20),
-                    Text(
-                      'Repeat Password',
-                      style: poppinsMedium.copyWith(
-                        fontSize: 12.sp,
-                      ),
-                    ),
-                    CustomField(
-                      hintText: 'Repeat Password',
-                      isPassword: true,
-                      isShowSuffixIcon: true,
-                    )
-                  ],
+                      CustomField(
+                        hintText: 'Repeat Password',
+                        isPassword: true,
+                        isShowSuffixIcon: true,
+                        controller: _repeatPasswordController,
+                      )
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -127,9 +135,38 @@ class RegisterScreen extends StatelessWidget {
                             ),
                           ),
                         ),
-                        onTap: () {
-                          Navigator.pushNamedAndRemoveUntil(
-                              context, Routes.LOGIN_SCREEN, (route) => false);
+                        onTap: () async {
+                          context.loaderOverlay.show();
+
+                          if (_formKey.currentState.validate()) {
+                            if (_passwordController.text !=
+                                _repeatPasswordController.text) {
+                              context.loaderOverlay.hide();
+                              showCustomSnackBar(
+                                  'Password tidak sama', context);
+                            } else {
+                              Map<String, dynamic> data = {
+                                "username": _usernameController.text,
+                                "password": _passwordController.text,
+                              };
+                              await Provider.of<AuthProvider>(context,
+                                      listen: false)
+                                  .registration(data)
+                                  .then(
+                                (value) {
+                                  if (value.isSuccess) {
+                                    Navigator.pushNamedAndRemoveUntil(context,
+                                        Routes.LOGIN_SCREEN, (route) => false);
+                                  } else {
+                                    context.loaderOverlay.hide();
+                                    showCustomSnackBar(value.message, context);
+                                  }
+                                },
+                              );
+                            }
+                          } else {
+                            context.loaderOverlay.hide();
+                          }
                         },
                       ),
                     ),

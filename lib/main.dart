@@ -28,7 +28,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (context) => di.sl<LanguageProvider>()),
         ChangeNotifierProvider(
             create: (context) => di.sl<LocalizationProvider>()),
-        // ChangeNotifierProvider(create: (context) => di.sl<AuthProvider>()),
+        ChangeNotifierProvider(create: (context) => di.sl<AuthProvider>()),
       ],
       child: MyApp(),
     ),

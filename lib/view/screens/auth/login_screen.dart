@@ -1,9 +1,12 @@
+import 'package:daily_meme_digest/provider/auth_provider.dart';
 import 'package:daily_meme_digest/util/routes.dart';
 import 'package:daily_meme_digest/util/styles.dart';
 import 'package:daily_meme_digest/view/base/custom_field.dart';
+import 'package:daily_meme_digest/view/base/custom_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -12,7 +15,7 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final _formKey = GlobalKey<FormState>();
-    final TextEditingController _emailController = TextEditingController();
+    final TextEditingController _usernameController = TextEditingController();
     final TextEditingController _passwordController = TextEditingController();
 
     bool keyboardIsOpen = MediaQuery.of(context).viewInsets.bottom != 0;
@@ -32,39 +35,43 @@ class LoginScreen extends StatelessWidget {
               child: Container(
                 padding: EdgeInsets.fromLTRB(30, 60, 30, 30),
                 width: double.infinity,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Image.asset(
-                        'assets/images/troll_face.png',
-                        width: 200,
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Image.asset(
+                          'assets/images/troll_face.png',
+                          width: 200,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 30),
-                    Text(
-                      'Username',
-                      style: poppinsMedium.copyWith(
-                        fontSize: 12.sp,
+                      SizedBox(height: 30),
+                      Text(
+                        'Username',
+                        style: poppinsMedium.copyWith(
+                          fontSize: 12.sp,
+                        ),
                       ),
-                    ),
-                    CustomField(
-                      hintText: 'Enter Username',
-                      onTap: () {},
-                    ),
-                    SizedBox(height: 20),
-                    Text(
-                      'Password',
-                      style: poppinsMedium.copyWith(
-                        fontSize: 12.sp,
+                      CustomField(
+                        hintText: 'Enter Username',
+                        controller: _usernameController,
                       ),
-                    ),
-                    CustomField(
-                      hintText: 'Enter Password',
-                      isPassword: true,
-                      isShowSuffixIcon: true,
-                    )
-                  ],
+                      SizedBox(height: 20),
+                      Text(
+                        'Password',
+                        style: poppinsMedium.copyWith(
+                          fontSize: 12.sp,
+                        ),
+                      ),
+                      CustomField(
+                        hintText: 'Enter Password',
+                        isPassword: true,
+                        isShowSuffixIcon: true,
+                        controller: _passwordController,
+                      )
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -123,9 +130,28 @@ class LoginScreen extends StatelessWidget {
                             ),
                           ),
                         ),
-                        onTap: () {
-                          Navigator.pushNamedAndRemoveUntil(
-                              context, Routes.getMainRoute(), (route) => false);
+                        onTap: () async {
+                          context.loaderOverlay.show();
+
+                          if (_formKey.currentState.validate()) {
+                            await Provider.of<AuthProvider>(context,
+                                    listen: false)
+                                .login(_usernameController.text,
+                                    _passwordController.text)
+                                .then(
+                              (value) {
+                                if (value.isSuccess) {
+                                  Navigator.pushNamedAndRemoveUntil(context,
+                                      Routes.getMainRoute(), (route) => false);
+                                } else {
+                                  context.loaderOverlay.hide();
+                                  showCustomSnackBar(value.message, context);
+                                }
+                              },
+                            );
+                          } else {
+                            context.loaderOverlay.hide();
+                          }
                         },
                       ),
                     ],

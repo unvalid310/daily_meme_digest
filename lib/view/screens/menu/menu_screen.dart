@@ -1,11 +1,27 @@
+import 'package:daily_meme_digest/util/app_constants.dart';
 import 'package:daily_meme_digest/util/images.dart';
 import 'package:daily_meme_digest/util/routes.dart';
 import 'package:daily_meme_digest/util/styles.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sizer/sizer.dart';
+import 'package:daily_meme_digest/di_container.dart' as di;
 
-class MenuScreen extends StatelessWidget {
+class MenuScreen extends StatefulWidget {
   const MenuScreen({Key key}) : super(key: key);
+
+  @override
+  State<MenuScreen> createState() => _MenuScreenState();
+}
+
+class _MenuScreenState extends State<MenuScreen> {
+  SharedPreferences _sharePref;
+  @override
+  void initState() {
+    // TODO: implement initState
+    _sharePref = di.sl();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,15 +72,24 @@ class MenuScreen extends StatelessWidget {
                     color: Color(0xFFE3E3E3),
                     image: DecorationImage(
                       fit: BoxFit.cover,
-                      image: AssetImage(
-                        'assets/images/profile.png',
-                      ),
+                      image:
+                          (_sharePref.getString(AppConstants.PROFILE_PICTURE) !=
+                                  null)
+                              ? AssetImage(
+                                  'assets/images/troll_face.png',
+                                )
+                              : NetworkImage(
+                                  _sharePref
+                                      .getString(AppConstants.PROFILE_PICTURE),
+                                ),
                     ),
                   ),
                 ),
                 SizedBox(height: 15),
                 Text(
-                  'Abram Press',
+                  (_sharePref.getString(AppConstants.NAME) != null)
+                      ? _sharePref.getString(AppConstants.NAME)
+                      : '-',
                   maxLines: 1,
                   style: poppinsMedium.copyWith(
                     fontSize: 14.sp,
@@ -73,7 +98,7 @@ class MenuScreen extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'abram.press97',
+                  _sharePref.getString(AppConstants.USERNAME),
                   maxLines: 1,
                   style: poppinsRegular.copyWith(
                     fontSize: 12.sp,
