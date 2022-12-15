@@ -1,3 +1,9 @@
+import 'package:daily_meme_digest/data/repository/leaderboard_repo.dart';
+import 'package:daily_meme_digest/data/repository/post_repo.dart';
+import 'package:daily_meme_digest/data/repository/profile_repo.dart';
+import 'package:daily_meme_digest/provider/leaderboard_provider.dart';
+import 'package:daily_meme_digest/provider/meme_provider.dart';
+import 'package:daily_meme_digest/provider/profile_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:daily_meme_digest/data/repository/auth_repo.dart';
@@ -29,10 +35,19 @@ Future<void> init() async {
   sl.registerLazySingleton(() => LanguageRepo());
   sl.registerLazySingleton(
       () => AuthRepo(dioClient: sl(), sharedPreferences: sl()));
+  sl.registerLazySingleton(
+      () => PostRepo(dioClient: sl(), sharedPreferences: sl()));
+  sl.registerLazySingleton(
+      () => LeaderboardRepo(dioClient: sl(), sharedPreferences: sl()));
+  sl.registerLazySingleton(
+      () => ProfileRepo(dioClient: sl(), sharedPreferences: sl()));
 
   // Provider
   sl.registerFactory(() => ThemeProvider(sharedPreferences: sl()));
   sl.registerFactory(() => LocalizationProvider(sharedPreferences: sl()));
   sl.registerFactory(() => LanguageProvider(languageRepo: sl()));
   sl.registerFactory(() => AuthProvider(authRepo: sl()));
+  sl.registerFactory(() => MemeProvider(memeRepo: sl()));
+  sl.registerFactory(() => LeaderboardProvider(leaderboardRepo: sl()));
+  sl.registerFactory(() => ProfileProvider(profileRepo: sl()));
 }

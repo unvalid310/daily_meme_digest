@@ -35,6 +35,7 @@ class CustomField extends StatefulWidget {
   final LanguageProvider languageProvider;
   final int maxLength;
   final bool readOnly;
+  final String initialValue;
 
   CustomField({
     this.hintText,
@@ -64,6 +65,7 @@ class CustomField extends StatefulWidget {
     this.languageProvider,
     this.maxLength,
     this.readOnly = false,
+    this.initialValue,
   });
 
   @override
@@ -136,17 +138,17 @@ class _CustomFieldState extends State<CustomField> {
           fontSize: 12.sp,
           color: ColorResources.COLOR_BLACK,
         ),
-        errorBorder: OutlineInputBorder(
+        errorBorder: UnderlineInputBorder(
           borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide(
             style: BorderStyle.solid,
             width: 1,
-            color: ColorResources.COLOR_WHITE,
+            color: Colors.red,
           ),
         ),
         errorStyle: Theme.of(context).textTheme.headline2.copyWith(
               fontSize: Dimensions.FONT_SIZE_SMALL.sp,
-              color: ColorResources.COLOR_WHITE,
+              color: Colors.red,
               fontStyle: FontStyle.italic,
             ),
         counterStyle: Theme.of(context).textTheme.headline2.copyWith(

@@ -1,44 +1,46 @@
-import 'package:daily_meme_digest/util/strings.dart';
-import 'package:dio/dio.dart';
-import 'package:flutter/widgets.dart';
 import 'package:daily_meme_digest/data/datasource/remote/dio/dio_client.dart';
 import 'package:daily_meme_digest/data/datasource/remote/exception/api_error_handler.dart';
 import 'package:daily_meme_digest/data/model/response/base/api_response.dart';
 import 'package:daily_meme_digest/util/app_constants.dart';
+import 'package:daily_meme_digest/util/strings.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class AuthRepo {
+class ProfileRepo {
   final DioClient dioClient;
   final SharedPreferences sharedPreferences;
 
-  AuthRepo({@required this.dioClient, @required this.sharedPreferences});
+  ProfileRepo({@required this.dioClient, @required this.sharedPreferences});
 
-  Future<ApiResponse> registration(Map<String, dynamic> data) async {
+  Future<ApiResponse> getProfile() async {
+    try {
+      Response response = await dioClient.get(
+        AppConstants.USER_URI,
+        queryParameters: {
+          'user_id': sharedPreferences.getString(
+            AppConstants.ID_USER,
+          )
+        },
+      );
+      return ApiResponse.withSuccess(response);
+    } catch (e) {
+      return ApiResponse.withError(ApiErrorHandler.getMessage(e.toString()));
+    }
+  }
+
+  Future<ApiResponse> updateProfile(FormData data) async {
     try {
       Response response = await dioClient.post(
-        AppConstants.REGISTER_URI,
+        AppConstants.USER_UPDATE_URI,
+        queryParameters: {
+          'user_id': sharedPreferences.getString(AppConstants.ID_USER),
+        },
         data: data,
       );
       return ApiResponse.withSuccess(response);
     } catch (e) {
-      print(e.toString());
-      return ApiResponse.withError(ApiErrorHandler.getMessage(e));
-    }
-  }
-
-  Future<ApiResponse> login(String username, String password) async {
-    try {
-      Response response = await dioClient.post(
-        AppConstants.LOGIN_URI,
-        data: FormData.fromMap({
-          "username": username,
-          "password": password,
-        }),
-      );
-      return ApiResponse.withSuccess(response);
-    } catch (e) {
-      print(e.toString());
-      return ApiResponse.withError(ApiErrorHandler.getMessage(e));
+      return ApiResponse.withError(ApiErrorHandler.getMessage(e.toString()));
     }
   }
 
@@ -48,6 +50,8 @@ class AuthRepo {
       String userName,
       String name,
       String createdAt}) async {
+    await sharedPreferences.remove(AppConstants.PROFILE_PICTURE);
+
     await sharedPreferences.setString(AppConstants.ID_USER, idUser.toString());
     await sharedPreferences.setString(AppConstants.USERNAME, userName);
 
@@ -64,14 +68,5 @@ class AuthRepo {
       AppConstants.CREATED_AT,
       getCustomDateFormat(DateTime.parse(createdAt), 'MMM YYYY'),
     );
-  }
-
-  bool isLoggedIn() {
-    return sharedPreferences.containsKey(AppConstants.ID_USER);
-  }
-
-  Future<bool> clearSharedData() async {
-    await sharedPreferences.clear();
-    return true;
   }
 }

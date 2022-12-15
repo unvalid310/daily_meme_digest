@@ -1,8 +1,10 @@
+import 'package:daily_meme_digest/provider/auth_provider.dart';
 import 'package:daily_meme_digest/util/app_constants.dart';
 import 'package:daily_meme_digest/util/images.dart';
 import 'package:daily_meme_digest/util/routes.dart';
 import 'package:daily_meme_digest/util/styles.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sizer/sizer.dart';
 import 'package:daily_meme_digest/di_container.dart' as di;
@@ -15,16 +17,21 @@ class MenuScreen extends StatefulWidget {
 }
 
 class _MenuScreenState extends State<MenuScreen> {
-  SharedPreferences _sharePref;
+  final SharedPreferences _sharePref = di.sl();
+  String imgUrl;
+  bool private;
+
   @override
   void initState() {
-    // TODO: implement initState
-    _sharePref = di.sl();
     super.initState();
+    imgUrl = _sharePref.getString(AppConstants.PROFILE_PICTURE);
+    private =
+        (_sharePref.getString(AppConstants.PRIVATE) != null) ? true : false;
   }
 
   @override
   Widget build(BuildContext context) {
+    print('profile picture >> $imgUrl');
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
@@ -48,6 +55,22 @@ class _MenuScreenState extends State<MenuScreen> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       InkWell(
+                        onTap: () async {
+                          await Provider.of<AuthProvider>(context,
+                                  listen: false)
+                              .logout()
+                              .then(
+                            (value) {
+                              if (value) {
+                                return Navigator.pushNamedAndRemoveUntil(
+                                  context,
+                                  Routes.LOGIN_SCREEN,
+                                  (route) => false,
+                                );
+                              }
+                            },
+                          );
+                        },
                         child: Container(
                           decoration: BoxDecoration(
                               shape: BoxShape.circle, color: Color(0xFFF2994A)),
@@ -71,16 +94,15 @@ class _MenuScreenState extends State<MenuScreen> {
                     shape: BoxShape.circle,
                     color: Color(0xFFE3E3E3),
                     image: DecorationImage(
-                      fit: BoxFit.cover,
                       image:
                           (_sharePref.getString(AppConstants.PROFILE_PICTURE) !=
                                   null)
-                              ? AssetImage(
-                                  'assets/images/troll_face.png',
-                                )
-                              : NetworkImage(
+                              ? NetworkImage(
                                   _sharePref
                                       .getString(AppConstants.PROFILE_PICTURE),
+                                )
+                              : AssetImage(
+                                  'assets/images/default_profile.png',
                                 ),
                     ),
                   ),
@@ -88,7 +110,26 @@ class _MenuScreenState extends State<MenuScreen> {
                 SizedBox(height: 15),
                 Text(
                   (_sharePref.getString(AppConstants.NAME) != null)
-                      ? _sharePref.getString(AppConstants.NAME)
+                      ? (private)
+                          ? _sharePref.getString(AppConstants.NAME).length > 3
+                              ? _sharePref
+                                      .getString(AppConstants.NAME)
+                                      .substring(
+                                          0,
+                                          _sharePref
+                                                  .getString(AppConstants.NAME)
+                                                  .length -
+                                              (_sharePref
+                                                      .getString(
+                                                          AppConstants.NAME)
+                                                      .length -
+                                                  3)) +
+                                  _sharePref
+                                      .getString(AppConstants.NAME)
+                                      .substring(3)
+                                      .replaceAll(RegExp(r"."), "*")
+                              : _sharePref.getString(AppConstants.NAME)
+                          : _sharePref.getString(AppConstants.NAME)
                       : '-',
                   maxLines: 1,
                   style: poppinsMedium.copyWith(
@@ -98,7 +139,7 @@ class _MenuScreenState extends State<MenuScreen> {
                   ),
                 ),
                 Text(
-                  _sharePref.getString(AppConstants.USERNAME),
+                  _sharePref.getString(AppConstants.USERNAME).toString(),
                   maxLines: 1,
                   style: poppinsRegular.copyWith(
                     fontSize: 12.sp,

@@ -17,13 +17,6 @@ class AuthProvider with ChangeNotifier {
     ResponseModel responseModel;
     ApiResponse apiResponse = await authRepo.registration(data);
     if (apiResponse.response.data['success']) {
-      Map<String, dynamic> data = apiResponse.response.data['data'];
-      await authRepo.saveUserData(
-        idUser: data['id'],
-        name: data['name'],
-        userName: data['username'],
-        profilePicture: data['image'],
-      );
       responseModel = ResponseModel(apiResponse.response.data['success'],
           apiResponse.response.data['message']);
     } else {
@@ -41,7 +34,14 @@ class AuthProvider with ChangeNotifier {
     ResponseModel responseModel;
     if (apiResponse.response.data['success']) {
       Map<String, dynamic> data = apiResponse.response.data['data'];
-      await authRepo.saveUserData(idUser: int.parse(data['id']));
+
+      authRepo.saveUserData(
+        idUser: data['id'],
+        name: data['name'],
+        userName: data['username'],
+        profilePicture: data['image'],
+        createdAt: data['created_at'],
+      );
 
       responseModel = ResponseModel(apiResponse.response.data['success'],
           apiResponse.response.data['message']);
